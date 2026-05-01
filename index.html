@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalenteri</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #c99cd9;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            flex: 1;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        button:active {
+            background: rgba(0,0,0,0.2);
+        }
+
+        .calendar {
+            padding: 20px;
+        }
+
+        .weekdays {
+            display: grid;
+            grid-template-columns: 40px repeat(7, 1fr);
+            text-align: center;
+            font-weight: bold;
+            padding: 10px 0;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .weekday {
+            padding: 5px;
+        }
+
+        .days {
+            display: grid;
+            grid-template-columns: 40px repeat(7, 1fr);
+            gap: 5px 0;
+            margin-top: 10px;
+        }
+
+        .week-number {
+            text-align: center;
+            padding: 8px 0;
+            font-size: 0.85rem;
+            color: #666;
+            background: #f9f9f9;
+        }
+
+        .day {
+            aspect-ratio: 1.25;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            background: white;
+        }
+
+        .days > div:not(:nth-child(8n)) {
+            border-right: 1px solid #e6e6e6;
+        }
+
+        .days > div:not(:last-child) {
+            border-bottom: 1px solid #e6e6e6;
+        }
+
+        .day:hover {
+            background: #e8e8e8;
+        }
+
+        .day.empty {
+            background: transparent;
+            cursor: default;
+        }
+
+        .day.today {
+            background: #c99cd9;
+            color: white;
+            font-weight: bold;
+        }
+
+        .day.other-month {
+            color: #999;
+            background: transparent;
+        }
+
+        .day.other-month:hover {
+            background: #f0f0f0;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            .nav-buttons {
+                width: 100%;
+                justify-content: center;
+            }
+            .weekdays {
+                grid-template-columns: 30px repeat(7, 1fr);
+            }
+            .days {
+                grid-template-columns: 30px repeat(7, 1fr);
+            }
+            .week-number {
+                font-size: 0.75rem;
+                padding: 5px 0;
+            }
+            .day {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="month-year"></h1>
+            <div class="nav-buttons">
+                <button id="prev-year">← Vuosi</button>
+                <button id="prev-month">← Kuukausi</button>
+                <button id="today">Tänään</button>
+                <button id="next-month">Kuukausi →</button>
+                <button id="next-year">Vuosi →</button>
+            </div>
+        </div>
+        <div class="calendar">
+            <div class="weekdays">
+                <div class="weekday"></div>
+                <div class="weekday">Ma</div>
+                <div class="weekday">Ti</div>
+                <div class="weekday">Ke</div>
+                <div class="weekday">To</div>
+                <div class="weekday">Pe</div>
+                <div class="weekday">La</div>
+                <div class="weekday">Su</div>
+            </div>
+            <div class="days" id="days"></div>
+        </div>
+    </div>
+
+    <script>
+        const monthNames = ['Tammikuu', 'Helmikuu', 'Maaliskuu', 'Huhtikuu', 'Toukokuu', 'Kesäkuu', 
+                           'Heinäkuu', 'Elokuu', 'Syyskuu', 'Lokakuu', 'Marraskuu', 'Joulukuu'];
+
+        let currentDate = new Date();
+
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            // Update header
+            document.getElementById('month-year').textContent = `${monthNames[month]} ${year}`;
+
+            // Get first day of month and last day of month
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+
+            // Find the Monday of the first week (European: week starts Monday)
+            const firstDayOfWeek = firstDay.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+            const mondayOfFirstWeek = new Date(firstDay);
+            // If first day is Sunday (0), go back to Monday of previous week (-6)
+            // If first day is Monday (1), it's already Monday (0)
+            // If first day is Tuesday (2), go back to Monday (-1)
+            mondayOfFirstWeek.setDate(firstDay.getDate() - ((firstDayOfWeek + 6) % 7));
+
+            // Find how many days to show (up to 42 for 6 weeks)
+            const startDate = new Date(mondayOfFirstWeek);
+            const endDate = new Date(lastDay);
+            // Extend to end of week (Sunday)
+            const daysToAdd = (7 - endDate.getDay() + 6) % 7 + 1;
+            endDate.setDate(endDate.getDate() + daysToAdd - 1);
+
+            const totalDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+            const weeks = Math.ceil(totalDays / 7);
+
+            // Today for comparison
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Generate calendar grid
+            const daysContainer = document.getElementById('days');
+            daysContainer.innerHTML = '';
+
+            for (let week = 0; week < weeks; week++) {
+                const weekStart = new Date(startDate);
+                weekStart.setDate(startDate.getDate() + week * 7);
+                
+                // Get ISO week number
+                const weekDate = new Date(weekStart);
+                weekDate.setDate(weekStart.getDate() + 3); // Thursday of that week
+                const weekNum = getISOWeekNumber(weekDate);
+
+                // Week number cell
+                const weekNumCell = document.createElement('div');
+                weekNumCell.className = 'week-number';
+                weekNumCell.textContent = weekNum;
+                daysContainer.appendChild(weekNumCell);
+
+                for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+                    const date = new Date(weekStart);
+                    date.setDate(weekStart.getDate() + dayOfWeek);
+
+                    const dayCell = document.createElement('div');
+                    dayCell.className = 'day';
+                    dayCell.textContent = date.getDate();
+
+                    // Check if date is in current month
+                    if (date.getMonth() !== month) {
+                        dayCell.classList.add('other-month');
+                    }
+
+                    // Check if date is empty (shouldn't happen with our logic)
+                    if (date.getMonth() < month - 1 || (date.getMonth() === month - 1 && date.getDate() > lastDay.getDate())) {
+                        dayCell.classList.add('empty');
+                    }
+
+                    // Check if today
+                    const dateKey = date.toDateString();
+                    if (dateKey === today.toDateString()) {
+                        dayCell.classList.add('today');
+                    }
+
+                    daysContainer.appendChild(dayCell);
+                }
+            }
+        }
+
+        // Get ISO week number (1-53)
+        function getISOWeekNumber(date) {
+            const d = new Date(date);
+            d.setDate(d.getDate() + 3); // Ensure Thursday
+            const dayNum = d.getDay() || 7; // Get day of week (1-7)
+            d.setDate(d.getDate() - dayNum + 1); // Monday of current week
+            const yearStart = new Date(d.getFullYear(), 0, 1);
+            return Math.ceil((d - yearStart) / (7 * 24 * 60 * 60 * 1000)) + 1;
+        }
+
+        function goToDate(date) {
+            currentDate = new Date(date);
+            renderCalendar();
+        }
+
+        function prevMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        }
+
+        function prevYear() {
+            currentDate.setFullYear(currentDate.getFullYear() - 1);
+            renderCalendar();
+        }
+
+        function nextYear() {
+            currentDate.setFullYear(currentDate.getFullYear() + 1);
+            renderCalendar();
+        }
+
+        function goToToday() {
+            currentDate = new Date();
+            renderCalendar();
+        }
+
+        // Event listeners
+        document.getElementById('prev-month').addEventListener('click', prevMonth);
+        document.getElementById('next-month').addEventListener('click', nextMonth);
+        document.getElementById('prev-year').addEventListener('click', prevYear);
+        document.getElementById('next-year').addEventListener('click', nextYear);
+        document.getElementById('today').addEventListener('click', goToToday);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' && e.ctrlKey) {
+                prevMonth();
+            } else if (e.key === 'ArrowRight' && e.ctrlKey) {
+                nextMonth();
+            } else if (e.key === 'ArrowLeft' && e.altKey) {
+                prevYear();
+            } else if (e.key === 'ArrowRight' && e.altKey) {
+                nextYear();
+            } else if (e.key === 'Home') {
+                goToToday();
+            }
+        });
+
+        // Initial render
+        renderCalendar();
+    </script>
+</body>
+</html>
