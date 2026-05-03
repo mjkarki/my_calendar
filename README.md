@@ -35,6 +35,10 @@ Luo kalenterisovellus, joka näyttää kuluvan kuukauden ruudukkona, jossa:
 | Sarakkeiden kaksoisreunus korjattu | `border-right` vain joka 8. solulta |
 | Violetin sävy punaisemmaksi | `#b19cd9` → `#c99cd9` |
 | Rivikorkeus suhteeksi 1:0.5 | `aspect-ratio: 2` |
+| Solujen mittasuhde kapeammaksi | `aspect-ratio: 2` → `1.5` |
+| Navigointinapeista pienemmät | `padding: 8px 16px` → `6px 12px`, `font-size: 1rem` → `0.85rem` |
+| Ruudukon vaakamarginaalit poistettu | `.calendar { padding: 20px }` → `padding: 20px 0` |
+| Ruudukko täysleveyteen | `.days { width: 100% }` |
 
 ## Käyttö
 
@@ -46,3 +50,5 @@ Avaa `index.html` selaimessa.
 - **Alt + ←** – Edellinen vuosi
 - **Alt + →** – Seuraava vuosi
 - **Home** – Siirry tänään
+
+--Mistral Vibe
