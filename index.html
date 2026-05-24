@@ -124,11 +124,6 @@
             background: #e8e8e8;
         }
 
-        .day.empty {
-            background: transparent;
-            cursor: default;
-        }
-
         .day.today {
             background: #c99cd9;
             color: white;
@@ -212,7 +207,6 @@
             // Get first day of month and last day of month
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
-            const daysInMonth = lastDay.getDate();
 
             // Find the Monday of the first week (European: week starts Monday)
             const firstDayOfWeek = firstDay.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
@@ -268,11 +262,6 @@
                         dayCell.classList.add('other-month');
                     }
 
-                    // Check if date is empty (shouldn't happen with our logic)
-                    if (date.getMonth() < month - 1 || (date.getMonth() === month - 1 && date.getDate() > lastDay.getDate())) {
-                        dayCell.classList.add('empty');
-                    }
-
                     // Check if today
                     const dateKey = date.toDateString();
                     if (dateKey === today.toDateString()) {
@@ -292,11 +281,6 @@
             d.setDate(d.getDate() - dayNum + 1); // Monday of current week
             const yearStart = new Date(d.getFullYear(), 0, 1);
             return Math.ceil((d - yearStart) / (7 * 24 * 60 * 60 * 1000)) + 1;
-        }
-
-        function goToDate(date) {
-            currentDate = new Date(date);
-            renderCalendar();
         }
 
         function prevMonth() {
