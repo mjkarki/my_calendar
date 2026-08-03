@@ -47,6 +47,7 @@
         .nav-buttons {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         button {
@@ -140,9 +141,13 @@
         }
 
         @media (max-width: 600px) {
+            body {
+                padding: 8px;
+            }
             .header {
                 flex-direction: column;
                 text-align: center;
+                padding: 15px 10px;
             }
             .nav-buttons {
                 width: 100%;
@@ -239,9 +244,7 @@
                 weekStart.setDate(startDate.getDate() + week * 7);
                 
                 // Get ISO week number
-                const weekDate = new Date(weekStart);
-                weekDate.setDate(weekStart.getDate() + 3); // Thursday of that week
-                const weekNum = getISOWeekNumber(weekDate);
+                const weekNum = getISOWeekNumber(weekStart);
 
                 // Week number cell
                 const weekNumCell = document.createElement('div');
@@ -276,30 +279,29 @@
         // Get ISO week number (1-53)
         function getISOWeekNumber(date) {
             const d = new Date(date);
-            d.setDate(d.getDate() + 3); // Ensure Thursday
-            const dayNum = d.getDay() || 7; // Get day of week (1-7)
-            d.setDate(d.getDate() - dayNum + 1); // Monday of current week
+            const dayNum = d.getDay() || 7; // Monday=1 ... Sunday=7
+            d.setDate(d.getDate() + 4 - dayNum); // Thursday of this week defines the ISO week-year
             const yearStart = new Date(d.getFullYear(), 0, 1);
-            return Math.ceil((d - yearStart) / (7 * 24 * 60 * 60 * 1000)) + 1;
+            return Math.ceil((Math.round((d - yearStart) / (24 * 60 * 60 * 1000)) + 1) / 7);
         }
 
         function prevMonth() {
-            currentDate.setMonth(currentDate.getMonth() - 1);
+            currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
             renderCalendar();
         }
 
         function nextMonth() {
-            currentDate.setMonth(currentDate.getMonth() + 1);
+            currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
             renderCalendar();
         }
 
         function prevYear() {
-            currentDate.setFullYear(currentDate.getFullYear() - 1);
+            currentDate = new Date(currentDate.getFullYear() - 1, currentDate.getMonth(), 1);
             renderCalendar();
         }
 
         function nextYear() {
-            currentDate.setFullYear(currentDate.getFullYear() + 1);
+            currentDate = new Date(currentDate.getFullYear() + 1, currentDate.getMonth(), 1);
             renderCalendar();
         }
 
